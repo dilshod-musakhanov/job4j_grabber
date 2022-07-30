@@ -3,6 +3,7 @@ package ru.job4j.quartz;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -15,30 +16,29 @@ import static org.quartz.TriggerBuilder.newTrigger;
 public class AlertRabbit {
     public static void main(String[] args) {
         try {
-            Class.forName(getProps().getProperty("driver-class-name"));
-            Connection connection = DriverManager.getConnection(
-                    getProps().getProperty("url"),
-                    getProps().getProperty("username"),
-                    getProps().getProperty("password")
-            );
-            Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
-            scheduler.start();
-            JobDataMap data = new JobDataMap();
-            data.put("connection", connection);
-            JobDetail job = newJob(Rabbit.class)
-                    .usingJobData(data)
-                    .build();
-            SimpleScheduleBuilder times = simpleSchedule()
-                    .withIntervalInSeconds(Integer.parseInt(getProps().getProperty("rabbit.interval")))
-                    .repeatForever();
-            Trigger trigger = newTrigger()
-                    .startNow()
-                    .withSchedule(times)
-                    .build();
-            scheduler.scheduleJob(job, trigger);
-            Thread.sleep(5000);
-            scheduler.shutdown();
-            System.out.println(connection);
+            Properties properties = getProps();
+            try (Connection connection = getConnection(properties)) {
+                Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
+                scheduler.start();
+                JobDataMap data = new JobDataMap();
+                data.put("connection", connection);
+                JobDetail job = newJob(Rabbit.class)
+                        .usingJobData(data)
+                        .build();
+                SimpleScheduleBuilder times = simpleSchedule()
+                        .withIntervalInSeconds(Integer.parseInt(getProps().getProperty("rabbit.interval")))
+                        .repeatForever();
+                Trigger trigger = newTrigger()
+                        .startNow()
+                        .withSchedule(times)
+                        .build();
+                scheduler.scheduleJob(job, trigger);
+                Thread.sleep(5000);
+                scheduler.shutdown();
+                System.out.println(connection);
+            } catch (SchedulerException | InterruptedException e) {
+                e.printStackTrace();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -71,10 +71,29 @@ public class AlertRabbit {
             if (properties.isEmpty()) {
                 throw new IllegalArgumentException("Properties file is empty");
             }
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return properties;
+    }
+
+    public static Connection getConnection(Properties properties) {
+        try {
+            Class.forName(getProps().getProperty("driver-class-name"));
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(
+                    getProps().getProperty("url"),
+                    getProps().getProperty("username"),
+                    getProps().getProperty("password")
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return connection;
     }
 }
 
