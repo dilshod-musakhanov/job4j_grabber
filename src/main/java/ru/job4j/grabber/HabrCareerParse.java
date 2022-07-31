@@ -31,8 +31,10 @@ public class HabrCareerParse {
                     Element titleElement = row.select(".vacancy-card__title").first();
                     Element linkElement = titleElement.child(0);
                     String vacancyName = titleElement.text();
-                    String link = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
-                    System.out.printf("%s, Опубликовано: %s, %s%n", vacancyName, vacancyDate, link);
+                    String link = String.format("%s%s%n", SOURCE_LINK, linkElement.attr("href"));
+                    System.out.printf("%s, Опубликовано: %s, %s", vacancyName, vacancyDate, link);
+                    System.out.println(retrieveDescription(link));
+                    System.out.println();
                 });
                 System.out.println();
             } catch (Exception e) {
@@ -41,8 +43,20 @@ public class HabrCareerParse {
         }
     }
 
+    private static String retrieveDescription(String link) {
+        Connection connection = Jsoup.connect(link);
+        Document document = null;
+        try {
+            document = connection.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        assert document != null;
+        return document.select(".collapsible-description__content").text();
+    }
+
     public static void main(String[] args) throws IOException {
-        parseAsPerPage(PAGE_LINK, 5);
+        parseAsPerPage(PAGE_LINK, 1);
     }
 
 }
