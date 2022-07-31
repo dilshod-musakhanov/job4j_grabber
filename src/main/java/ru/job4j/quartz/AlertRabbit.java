@@ -26,7 +26,7 @@ public class AlertRabbit {
                         .usingJobData(data)
                         .build();
                 SimpleScheduleBuilder times = simpleSchedule()
-                        .withIntervalInSeconds(Integer.parseInt(getProps().getProperty("rabbit.interval")))
+                        .withIntervalInSeconds(Integer.parseInt(properties.getProperty("rabbit.interval")))
                         .repeatForever();
                 Trigger trigger = newTrigger()
                         .startNow()
@@ -77,22 +77,13 @@ public class AlertRabbit {
         return properties;
     }
 
-    public static Connection getConnection(Properties properties) {
-        try {
-            Class.forName(getProps().getProperty("driver-class-name"));
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        Connection connection = null;
-        try {
-            connection = DriverManager.getConnection(
-                    getProps().getProperty("url"),
-                    getProps().getProperty("username"),
-                    getProps().getProperty("password")
+    public static Connection getConnection(Properties properties) throws ClassNotFoundException, SQLException {
+        Class.forName(getProps().getProperty("driver-class-name"));
+        Connection connection = DriverManager.getConnection(
+                getProps().getProperty("url"),
+                getProps().getProperty("username"),
+                getProps().getProperty("password")
             );
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
         return connection;
     }
 }
