@@ -7,26 +7,26 @@ public class Post {
 
     private int id;
 
-    private String link;
-
     private String title;
 
     private String description;
 
+    private String link;
+
     private LocalDateTime created;
 
-    public Post(String link, String title, String description, LocalDateTime created) {
-        this.link = link;
+    public Post(String title, String description, String link, LocalDateTime created) {
         this.title = title;
         this.description = description;
+        this.link = link;
         this.created = created;
     }
 
-    public Post(int id, String link, String title, String description, LocalDateTime created) {
+    public Post(int id, String title, String description, String link, LocalDateTime created) {
         this.id = id;
-        this.link = link;
         this.title = title;
         this.description = description;
+        this.link = link;
         this.created = created;
     }
 
@@ -51,9 +51,9 @@ public class Post {
     public String toString() {
         return "Post{"
                 + "id=" + id
-                + ", link='" + link + '\''
                 + ", title='" + title + '\''
                 + ", description='" + description + '\''
+                + ", link='" + link + '\''
                 + ", created=" + created
                 + '}';
     }
