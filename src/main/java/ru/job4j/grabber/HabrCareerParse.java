@@ -8,6 +8,7 @@ import org.jsoup.Connection;
 import ru.job4j.utils.DateTimeParser;
 import ru.job4j.utils.HabrCareerDateTimeParser;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,25 +26,20 @@ public class HabrCareerParse implements Parse {
         this.dateTimeParser = dateTimeParser;
     }
 
-    public List<Post> parseAsPerPage(Document document) {
-        List<Post> list = new ArrayList<>();
-        Elements rows = document.select(".vacancy-card__inner");
-        rows.forEach(row -> {
-            Element dateElement = row.select(".vacancy-card__date").first();
-            Element dateEl = dateElement.child(0);
-            String vacancyDate = dateEl.attr("datetime");
-            Element titleElement = row.select(".vacancy-card__title").first();
-            Element linkElement = titleElement.child(0);
-            String vacancyName = titleElement.text();
-            String link = String.format("%s%s%n", SOURCE_LINK, linkElement.attr("href"));
-            list.add(new Post(
-                    link,
-                    vacancyName,
-                    retrieveDescription(link),
-                    dateTimeParser.parse(vacancyDate)
-            ));
-        });
-        return list;
+    public Post parseAsPerPage(Element element) {
+        Element dateElement = element.select(".vacancy-card__date").first();
+        Element dateEl = dateElement.child(0);
+        String vacancyDate = dateEl.attr("datetime");
+        Element titleElement = element.select(".vacancy-card__title").first();
+        Element linkElement = titleElement.child(0);
+        String vacancyName = titleElement.text();
+        String link = String.format("%s%s%n", SOURCE_LINK, linkElement.attr("href"));
+        return new Post(
+                link,
+                vacancyName,
+                retrieveDescription(link),
+                dateTimeParser.parse(vacancyDate)
+        );
     }
 
     private static String retrieveDescription(String link) {
@@ -53,8 +49,8 @@ public class HabrCareerParse implements Parse {
         try {
             document = connection.get();
             element = document.select(".collapsible-description__content").text();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("retrieveDescription() failed");
         }
         return element;
     }
@@ -67,9 +63,10 @@ public class HabrCareerParse implements Parse {
             Connection connection = Jsoup.connect(urlPages);
             try {
                 Document document = connection.get();
-                posts.addAll(parseAsPerPage(document));
-            } catch (Exception e) {
-                e.printStackTrace();
+                Elements rows = document.select(".vacancy-card__inner");
+                rows.forEach(row -> posts.add(parseAsPerPage(row)));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("list() failed");
             }
         }
         return posts;
