@@ -115,25 +115,4 @@ public class PsqlStore implements Store, AutoCloseable {
         }
     }
 
-    public static void main(String[] args) {
-        LocalDateTime created = LocalDateTime.now();
-        Properties cfg = getProperties();
-        PsqlStore psqlStore = new PsqlStore(cfg);
-        psqlStore.save(new Post(
-                "Java Jr",
-                "Testing, Coding, Learning,Taking all the shit",
-                "www.test.test/test1",
-                created)
-        );
-        psqlStore.save(new Post(
-                "Java Mid",
-                "Testing, Coding, Learning,Taking even more the shit",
-                "www.test.test/test2",
-                created)
-        );
-        Post post = psqlStore.findById(1);
-        System.out.println(post);
-        List<Post> postAll = psqlStore.getAll();
-        postAll.forEach(System.out::println);
-    }
 }
